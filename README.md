@@ -33,7 +33,7 @@ All infrastructure, from networking to monitoring, is defined as code — allowi
 ## Development Timeline
 
 - Bootstrap repo (Go modules, folder layout) (#2)
-- Minimal API (/health, /metrics) (#3)
+- Minimal API (/health, /metrics) (#4)
 - Local Docker Compose with Prometheus ()
 - Terraform backend (S3 + DynamoDB lock) ()
 - VPC module ()
