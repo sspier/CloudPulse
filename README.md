@@ -29,8 +29,8 @@ All infrastructure, from networking to monitoring, is defined as code — allowi
 
 ## Development Timeline
 - 0: Bootstrap repo (Go modules, folder layout)    (#0)
-- 1: Local Docker Compose with Prometheus          (#1)
-- 2: Minimal API (/health, /metrics)               (#2)
+- 1: Minimal API (/health, /metrics)               (#1)
+- 2: Local Docker Compose with Prometheus          (#2)
 - 3: Terraform backend (S3 + DynamoDB lock)        (#3)
 - 4: VPC module                                    (#4)
 - 5: ECS Fargate API + ALB                         (#5)
