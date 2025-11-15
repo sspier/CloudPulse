@@ -10,7 +10,7 @@ It provisions all infrastructure with **Terraform** and runs lightweight **Go** 
 
 It periodically probes registered endpoints (HTTP/TCP) to measure uptime, response latency, and error rates.
 
-All infrastructure, from networking to monitoring, is defined as code — allowing reproducible environments and automated deployments.
+All infrastructure, from networking to monitoring, is defined as code - allowing reproducible environments and automated deployments.
 
 ## Tech Stack
 
