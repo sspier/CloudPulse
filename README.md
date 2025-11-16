@@ -35,7 +35,7 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 - Bootstrap repo (Go modules, folder layout) ([#2](../../pull/2))
 - Minimal API (/health, /metrics) ([#4](../../pull/4))
 - Local Docker Compose with Prometheus ([#6](../../pull/6))
-- Terraform backend (S3) ()
+- Terraform backend (S3) ([#8](../../pull/8))
 - VPC module ()
 - ECS Fargate API + ALB ()
 - DynamoDB results table ()
