@@ -36,7 +36,7 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 - Minimal API (/health, /metrics) ([#4](../../pull/4))
 - Local Docker Compose with Prometheus ([#6](../../pull/6))
 - Terraform backend (S3) ([#8](../../pull/8))
-- VPC module ()
+- VPC infrastructure ([#10](../../pull/10))
 - ECS Fargate API + ALB ()
 - DynamoDB results table ()
 - Runner (EventBridge schedule) ()
@@ -49,3 +49,5 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 2. Added Components -> API (initial) describing /health and /metrics.
 3. Local Docker Compose with Prometheus
 4. Terraform backend (S3)
+5. VPC infrastructure
+6. 
