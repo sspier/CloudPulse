@@ -41,7 +41,7 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 - DynamoDB results table ([#14](../../pull/14))
 - Runner (EventBridge schedule) ([#16](../../pull/16))
 - CloudWatch alarms & dashboards ([#18](../../pull/18))
-- CI/CD (GitHub Actions) ()
+- CI/CD (GitHub Actions) ([#20](../../pull/20))
 
 ## Changes Tracking
 
@@ -54,3 +54,4 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 7. DynamoDB results table\
 8. Runner (EventBridge schedule)
 9. CloudWatch alarms & dashboards
+10. CI/CD (GitHub Actions)
