@@ -39,7 +39,7 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 - VPC infrastructure ([#10](../../pull/10))
 - ECS Fargate API + ALB ([#12](../../pull/12))
 - DynamoDB results table ([#14](../../pull/14))
-- Runner (EventBridge schedule) ()
+- Runner (EventBridge schedule) ([#16](../../pull/16))
 - CloudWatch alarms & dashboards ()
 - CI/CD (GitHub Actions) ()
 
@@ -51,4 +51,5 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 4. Terraform backend (S3)
 5. VPC infrastructure
 6. ECS Fargate API + ALB
-7. DynamoDB results table
+7. DynamoDB results table\
+8. Runner (EventBridge schedule)
