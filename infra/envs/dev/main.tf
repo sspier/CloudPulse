@@ -78,3 +78,15 @@ module "ecs_api" {
   }
 }
 
+module "results_table" {
+  source = "../../modules/dynamodb_results"
+
+  table_name_prefix = "cloudpulse-probe-results"
+  env               = "dev"
+
+  tags = {
+    Project = "cloudpulse"
+    Env     = "dev"
+  }
+}
+
