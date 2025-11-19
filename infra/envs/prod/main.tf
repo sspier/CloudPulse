@@ -49,3 +49,18 @@ module "results_table" {
   }
 }
 
+module "runner" {
+  source = "../../modules/runner"
+
+  env                 = "prod"
+  schedule_expression = "rate(5 minutes)"
+
+  runner_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/cloudpulse-runner:prod"
+
+  tags = {
+    Project = "cloudpulse"
+    Env     = "prod"
+  }
+}
+
+

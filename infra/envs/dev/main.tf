@@ -90,3 +90,19 @@ module "results_table" {
   }
 }
 
+module "runner" {
+  source = "../../modules/runner"
+
+  env                 = "dev"
+  schedule_expression = "rate(1 minute)"
+
+  // TODO: point this at a real ECR image once the runner container exists.
+  runner_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/cloudpulse-runner:dev"
+
+  tags = {
+    Project = "cloudpulse"
+    Env     = "dev"
+  }
+}
+
+
