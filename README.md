@@ -37,7 +37,7 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 - Local Docker Compose with Prometheus ([#6](../../pull/6))
 - Terraform backend (S3) ([#8](../../pull/8))
 - VPC infrastructure ([#10](../../pull/10))
-- ECS Fargate API + ALB ()
+- ECS Fargate API + ALB ([#12](../../pull/12))
 - DynamoDB results table ()
 - Runner (EventBridge schedule) ()
 - CloudWatch alarms & dashboards ()
@@ -50,4 +50,4 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 3. Local Docker Compose with Prometheus
 4. Terraform backend (S3)
 5. VPC infrastructure
-6. 
+6. ECS Fargate API + ALB
