@@ -36,3 +36,16 @@ module "vpc" {
     Env     = "prod"
   }
 }
+
+module "results_table" {
+  source = "../../modules/dynamodb_results"
+
+  table_name_prefix = "cloudpulse-probe-results"
+  env               = "prod"
+
+  tags = {
+    Project = "cloudpulse"
+    Env     = "prod"
+  }
+}
+
