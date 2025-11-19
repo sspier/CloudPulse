@@ -105,4 +105,22 @@ module "runner" {
   }
 }
 
+module "observability" {
+  source = "../../modules/observability"
+
+  env                  = "dev"
+  ecs_cluster_name     = module.ecs_api.ecs_cluster_name
+  ecs_service_name     = module.ecs_api.ecs_service_name
+  runner_function_name = module.runner.lambda_function_name
+  dynamodb_table_name  = module.results_table.table_name
+
+  alarm_actions = [] # can be wired to SNS later
+  ok_actions    = []
+
+  tags = {
+    Project = "cloudpulse"
+    Env     = "dev"
+  }
+}
+
 

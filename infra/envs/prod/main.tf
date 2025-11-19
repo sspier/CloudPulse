@@ -21,6 +21,35 @@ provider "aws" {
   region = "us-east-1"
 }
 
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+
+locals {
+  api_image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/cloudpulse-api:prod"
+}
+
+
+module "ecs_api" {
+  source = "../../modules/ecs_api"
+
+  vpc_id             = module.vpc.vpc_id
+  public_subnet_ids  = module.vpc.public_subnet_ids
+  private_subnet_ids = module.vpc.private_subnet_ids
+
+  container_image = local.api_image # dynamic based on account+region
+  container_port  = 8080
+  desired_count   = 1
+  region          = data.aws_region.current.name
+
+  tags = {
+    Project = "cloudpulse"
+    Env     = "prod"
+  }
+}
+
+
 module "vpc" {
   source = "../../modules/vpc"
 
@@ -62,5 +91,24 @@ module "runner" {
     Env     = "prod"
   }
 }
+
+module "observability" {
+  source = "../../modules/observability"
+
+  env                  = "prod"
+  ecs_cluster_name     = module.ecs_api.ecs_cluster_name
+  ecs_service_name     = module.ecs_api.ecs_service_name
+  runner_function_name = module.runner.lambda_function_name
+  dynamodb_table_name  = module.results_table.table_name
+
+  alarm_actions = []
+  ok_actions    = []
+
+  tags = {
+    Project = "cloudpulse"
+    Env     = "prod"
+  }
+}
+
 
 
