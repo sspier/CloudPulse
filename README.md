@@ -88,6 +88,7 @@ GET /results/{id}
 - CloudWatch alarms & dashboards ([#18](../../pull/18))
 - CI/CD (GitHub Actions) ([#20](../../pull/20))
 - Recurring uptime checks and per-target result history ([#22](../../pull/22))
+- Pause for documentation ([#24](../../pull/22))
 
 ## Changes Tracking
 
@@ -102,3 +103,4 @@ GET /results/{id}
 9. CloudWatch alarms & dashboards
 10. CI/CD (GitHub Actions)
 11. Recurring uptime checks and per-target result history
+12. Pause for documentation
