@@ -1,72 +1,95 @@
 name: CI
 
 on:
-    push:
-        branches: [main]
-    pull_request:
+  # run CI on every push to main and on all PRs
+  push:
+    branches: [main]
+  pull_request:
 
 permissions:
-    contents: read
+  # workflow only needs read access for checkout
+  contents: read
 
 jobs:
-    go-tests:
-        name: Go tests & vet
-        runs-on: ubuntu-latest
+  ############################################
+  # go tests + vet
+  ############################################
+  go-tests:
+    name: go tests & vet
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      # pull repo contents into the runner
+      - name: checkout
+        uses: actions/checkout@v4
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: "1.22"
+      # install go toolchain
+      - name: set up go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
 
-            - name: Download Go modules
-              run: go mod download
+      # ensure module dependencies are pulled
+      - name: download go modules
+        run: go mod download
 
-            - name: Run Go tests
-              run: go test ./...
+      # run unit tests across the whole repo
+      - name: run go tests
+        run: go test ./...
 
-            - name: Run go vet
-              run: go vet ./...
+      # static analysis for common mistakes
+      - name: run go vet
+        run: go vet ./...
 
-    terraform-checks:
-        name: Terraform fmt & validate
-        runs-on: ubuntu-latest
+  ############################################
+  # terraform fmt + validate
+  ############################################
+  terraform-checks:
+    name: terraform fmt & validate
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      # access the repo code
+      - name: checkout
+        uses: actions/checkout@v4
 
-            - name: Set up Terraform
-              uses: hashicorp/setup-terraform@v3
-              with:
-                  terraform_version: 1.11.0
+      # install terraform cli
+      - name: set up terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.0
 
-            - name: Terraform fmt (recursive)
-              run: terraform fmt -check -recursive
+      # enforce terraform formatting across the repo
+      - name: terraform fmt (recursive)
+        run: terraform fmt -check -recursive
 
-            - name: Terraform validate (dev)
-              working-directory: infra/envs/dev
-              run: |
-                  terraform init -backend=false
-                  terraform validate
+      # validate dev config without touching the real backend
+      - name: terraform validate (dev)
+        working-directory: infra/envs/dev
+        run: |
+          terraform init -backend=false
+          terraform validate
 
-            - name: Terraform validate (prod)
-              working-directory: infra/envs/prod
-              run: |
-                  terraform init -backend=false
-                  terraform validate
+      # validate prod config as well for parity
+      - name: terraform validate (prod)
+        working-directory: infra/envs/prod
+        run: |
+          terraform init -backend=false
+          terraform validate
 
-    docker-api-build:
-        name: Build API Docker image
-        runs-on: ubuntu-latest
-        needs: go-tests
+  ############################################
+  # docker build verification
+  ############################################
+  docker-api-build:
+    name: build api docker image
+    runs-on: ubuntu-latest
+    needs: go-tests # only build if tests pass
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      # checkout source code again for this job
+      - name: checkout
+        uses: actions/checkout@v4
 
-            - name: Build cloudpulse-api image
-              run: docker build -t cloudpulse-api:ci -f deployments/docker/Dockerfile.api .
+      # make sure the api dockerfile builds successfully
+      - name: build cloudpulse-api image
+        run: docker build -t cloudpulse-api:ci -f deployments/docker/Dockerfile.api .

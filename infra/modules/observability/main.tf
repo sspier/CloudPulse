@@ -1,14 +1,17 @@
 locals {
+  # shared prefix used for all observability resources in this environment
   name_prefix = "cloudpulse-${var.env}"
 }
 
 #############################
-# ECS API CPU alarm
+# ecs api cpu alarm
 #############################
 
+# alarms when the api ecs service averages >80% cpu for 3 minutes
+# helps catch runaway traffic, bad deployments, or container loops
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "${local.name_prefix}-ecs-api-high-cpu"
-  alarm_description   = "CloudPulse API ECS service CPU > 80% for 3 minutes (${var.env})"
+  alarm_description   = "cloudpulse api ecs service cpu > 80% for 3 minutes (${var.env})"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "CPUUtilization"
@@ -22,25 +25,26 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
     ServiceName = var.ecs_service_name
   }
 
+  # missing data treated as healthy to avoid false positives after deploys
   treat_missing_data = "notBreaching"
   alarm_actions      = var.alarm_actions
   ok_actions         = var.ok_actions
 
   tags = merge(
     var.tags,
-    {
-      Name = "${local.name_prefix}-ecs-api-high-cpu"
-    }
+    { Name = "${local.name_prefix}-ecs-api-high-cpu" }
   )
 }
 
 #############################
-# Runner Lambda errors alarm
+# runner lambda errors alarm
 #############################
 
+# triggers if the probe-runner lambda records any errors
+# catches issues with network calls, bad target lists, or permissions
 resource "aws_cloudwatch_metric_alarm" "runner_errors" {
   alarm_name        = "${local.name_prefix}-runner-errors"
-  alarm_description = "CloudPulse runner Lambda has errors (${var.env})"
+  alarm_description = "cloudpulse runner lambda has errors (${var.env})"
 
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
@@ -60,19 +64,19 @@ resource "aws_cloudwatch_metric_alarm" "runner_errors" {
 
   tags = merge(
     var.tags,
-    {
-      Name = "${local.name_prefix}-runner-errors"
-    }
+    { Name = "${local.name_prefix}-runner-errors" }
   )
 }
 
 #############################
-# DynamoDB throttling alarms
+# dynamodb throttling alarms
 #############################
 
+# alarms when reads on the probe-results table are throttled
+# usually indicates the runner is reading too frequently or misconfigured
 resource "aws_cloudwatch_metric_alarm" "ddb_read_throttles" {
   alarm_name        = "${local.name_prefix}-ddb-read-throttles"
-  alarm_description = "DynamoDB read throttles on probe results table (${var.env})"
+  alarm_description = "dynamodb read throttles on probe results table (${var.env})"
 
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
@@ -92,15 +96,15 @@ resource "aws_cloudwatch_metric_alarm" "ddb_read_throttles" {
 
   tags = merge(
     var.tags,
-    {
-      Name = "${local.name_prefix}-ddb-read-throttles"
-    }
+    { Name = "${local.name_prefix}-ddb-read-throttles" }
   )
 }
 
+# alarms when writes to the table are throttled
+# helps detect issues where too many probe results are being written too fast
 resource "aws_cloudwatch_metric_alarm" "ddb_write_throttles" {
   alarm_name        = "${local.name_prefix}-ddb-write-throttles"
-  alarm_description = "DynamoDB write throttles on probe results table (${var.env})"
+  alarm_description = "dynamodb write throttles on probe results table (${var.env})"
 
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
@@ -120,16 +124,16 @@ resource "aws_cloudwatch_metric_alarm" "ddb_write_throttles" {
 
   tags = merge(
     var.tags,
-    {
-      Name = "${local.name_prefix}-ddb-write-throttles"
-    }
+    { Name = "${local.name_prefix}-ddb-write-throttles" }
   )
 }
 
 #############################
-# CloudWatch dashboard
+# cloudwatch dashboard
 #############################
 
+# dashboard summarizing the health of the api, runner, and results table
+# gives a quick at-a-glance view into system behavior
 resource "aws_cloudwatch_dashboard" "this" {
   dashboard_name = "${local.name_prefix}-dashboard"
 

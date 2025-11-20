@@ -1,34 +1,39 @@
-#  build ----------------------------------------
+# build stage ----------------------------------------------------
+# use alpine-based golang image for a smaller build environment
 FROM golang:1.22-alpine AS builder
 
-# build tools
+# install basic certs so the built binary can make tls calls
 RUN apk add --no-cache ca-certificates
 
+# set build workspace
 WORKDIR /app
 
-# copy go.mod/go.sum to leverage Docker layer caching
+# copy module files first to take advantage of docker layer caching
 COPY go.mod go.sum ./
 RUN go mod download
 
-# copy the rest of the repo
+# copy the rest of the project
 COPY . .
 
-# build API binary
+# build the cloudpulse api binary
+# disable cgo to produce a static binary that runs cleanly on alpine
 WORKDIR /app/apps/api
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bin/cloudpulse-api
 
-# runtime ----------------------------------------
+# runtime stage --------------------------------------------------
+# minimal alpine base for production
 FROM alpine:3.19
 
-# add non-root user
+# create a non-root user for better security
 RUN adduser -D -g '' appuser
 USER appuser
 
-# copy compiled binary
+# copy the compiled api binary from the builder stage
 COPY --from=builder /bin/cloudpulse-api /cloudpulse-api
 
-# default port
+# default api port
 ENV PORT=8080
 EXPOSE 8080
 
+# run the api server
 ENTRYPOINT ["/cloudpulse-api"]
