@@ -26,6 +26,51 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 
 ---
 
+## API Documentation
+
+Create a new target to monitor:
+
+```bash
+POST /targets
+
+Request:
+
+```json
+{
+  "name": "Example",
+  "url": "https://example.com"
+}
+
+Response:
+
+```json
+{
+  "id": "20251120184323.874139000",
+  "name": "Example",
+  "url": "https://example.com"
+}
+```
+
+Return all targets:
+
+```bash
+GET /targets
+```
+
+Return the latest probe result for each target:
+
+```bash
+GET /results
+```
+
+Return the full probe history for the given target ID:
+
+```bash
+GET /results/{id}
+```
+
+
+
 ## Status
 
 - In active development.
@@ -42,6 +87,7 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 - Runner (EventBridge schedule) ([#16](../../pull/16))
 - CloudWatch alarms & dashboards ([#18](../../pull/18))
 - CI/CD (GitHub Actions) ([#20](../../pull/20))
+- Recurring uptime checks and per-target result history ([#22](../../pull/22))
 
 ## Changes Tracking
 
@@ -55,3 +101,4 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 8. Runner (EventBridge schedule)
 9. CloudWatch alarms & dashboards
 10. CI/CD (GitHub Actions)
+11. Recurring uptime checks and per-target result history
