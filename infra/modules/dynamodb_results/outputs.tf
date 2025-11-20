@@ -1,9 +1,11 @@
+# exposes the table name so other modules can reference it
 output "table_name" {
-  description = "Name of the DynamoDB results table"
+  description = "name of the dynamodb results table"
   value       = aws_dynamodb_table.results.name
 }
 
+# arn is useful for iam policies or monitoring modules
 output "table_arn" {
-  description = "ARN of the DynamoDB results table"
+  description = "arn of the dynamodb results table"
   value       = aws_dynamodb_table.results.arn
 }
