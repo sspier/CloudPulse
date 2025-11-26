@@ -98,7 +98,7 @@ GET /results/{id}
 4. Terraform backend (S3)
 5. VPC infrastructure
 6. ECS Fargate API + ALB
-7. DynamoDB results table\
+7. DynamoDB results table
 8. Runner (EventBridge schedule)
 9. CloudWatch alarms & dashboards
 10. CI/CD (GitHub Actions)
