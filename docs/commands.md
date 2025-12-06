@@ -21,3 +21,7 @@
 	- Create a pipe directly to a pod:
 		- kubectl port-forward pod/cloudpulse-api-xxxxx 8080:8080
 
+- Clean out old manually-applied Deployment/service
+	- kubectl -n cloudpulse delete deploy cloudpulse-api
+	- kubectl -n cloudpulse delete svc cloudpulse-api
+
