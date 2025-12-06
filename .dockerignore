@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+
+# CI config
+.github
+
+# Terraform
+**/.terraform
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+*.tfvars
+*.tfvars.json
+.terraform.rc
+terraform.rc
+
+# Go build artifacts
+bin
+dist
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Node / Python 
+**/node_modules
+**/__pycache__
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs / notes
+docs
+notes.md
