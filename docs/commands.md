@@ -1,6 +1,6 @@
 # CloudPulse Commands
 
-- build: docker build -f deployments/docker/Dockerfile.api .
+- build: docker build -f apps/api/Dockerfile .
 - run: docker compose -f deployments/compose/docker-compose.local.yml up --build
 - see health: curl -v http://localhost:8080/health
 - see logs for container: 'docker ps' then 'docker logs cloudpulse-api-1'

@@ -4,11 +4,11 @@ version: "3.9"
 
 services:
   api:
-    # builds the cloudpulse api using the Dockerfile in deployments/docker/Dockerfile.api
+    # builds the cloudpulse api using the Dockerfile in apps/api/Dockerfile
     # context is the project root because the api references code outside this directory
     build:
       context: ../..
-      dockerfile: deployments/docker/Dockerfile.api
+      dockerfile: apps/api/Dockerfile
 
     # expose the port the api listens on
     environment:
