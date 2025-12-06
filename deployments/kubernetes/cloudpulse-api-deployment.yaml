@@ -1,0 +1,53 @@
+apiVersion: apps/v1 # tells Kubernetes which API group/version this resource belongs to
+kind: Deployment # Specifies that this is a Deployment resource that manages a ReplicaSet and handles rolling updates
+metadata:
+  name: cloudpulse-api # name of the deployment object. must be unique within the namespace
+  namespace: cloudpulse # deploys this into the cloudpulse namespace
+  labels:
+    app: cloudpulse-api # label to identify the deployment to the selector
+spec: # specification of the desired behavior of the deployment
+  replicas: 2 # number of pod replicas to run at all times
+  selector:
+    matchLabels:
+      # this selector ties the deployment + replicaSet + pods together
+      app: cloudpulse-api # matches pods with this label to manage them. must match the pod template labels
+  template:
+    metadata:
+      labels:
+        app: cloudpulse-api # label to identify pods created by this deployment. must match the selector above
+    spec: # pod spec: what containers to run and how to run them
+      automountServiceAccountToken: false # disables mounting the default service account token into the pod for security
+      containers:
+        - name: api # defines one container named api inside each pod
+          # container image & startup behavior
+          image: cloudpulse-api:dev # uses the cloudpulse-api:dev image built locally by kind
+          imagePullPolicy: IfNotPresent # only pulls the image if it’s not already present on the node
+          # container networking
+          ports:
+            # does not actually open the port or configure the app - purely metadata
+            - containerPort: 8080 # exposes port 8080 INSIDE the container where the api listens
+          env:
+            - name: PORT
+              value: "8080" # sets PORT inside the container to 8080 - tells the application what port to listen on
+          readinessProbe: # check if the container is ready to receive traffic
+            # Kubernetes calls http://pod-ip:8080/health
+            # 200–399 indicates pod is considered ready
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5 # wait 5 seconds before starting readiness checks
+            periodSeconds: 10 # check every 10 seconds
+          livenessProbe: # configures a liveness probe to check if the container is alive
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            # resources: CPU & memory guarantees
+          resources:
+            requests:
+              memory: "128Mi" # guarantees min of 128 mebibytes (≈128MB) memory for the container
+              cpu: "100m" # guarantees min of 100 millicores (0.10 cores) CPU for the container
+            limits:
+              memory: "256Mi" # limits max memory to 256 mebibytes (≈256MB) for the container
+              cpu: "500m" # limits max CPU to 500 millicores (0.50 cores) for the container

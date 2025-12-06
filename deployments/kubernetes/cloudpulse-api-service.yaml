@@ -1,0 +1,15 @@
+apiVersion: v1 # specifies this is a core/v1 resource
+kind: Service # defines a Service resource to expose the deployment internally in the cluster
+metadata:
+  name: cloudpulse-api
+  namespace: cloudpulse
+  labels: # label to identify the service
+    app: cloudpulse-api # must match the selector in the deployment
+spec:
+  type: ClusterIP # exposes the service only within the cluster
+  selector: # selects pods with this label to route traffic to
+    app: cloudpulse-api # must match the deployment pod template labels
+  ports: # defines the ports the service exposes
+    - name: http
+      port: 80 # exposes port 80 on the service
+      targetPort: 8080 # routes traffic to port 8080 on the selected pods

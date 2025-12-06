@@ -92,4 +92,4 @@ jobs:
 
       # make sure the api dockerfile builds successfully
       - name: build cloudpulse-api image
-        run: docker build -t cloudpulse-api:ci -f deployments/docker/Dockerfile.api .
+        run: docker build -t cloudpulse-api:ci -f apps/api/Dockerfile .
