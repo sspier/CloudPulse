@@ -1,0 +1,83 @@
+# Default values for cloudpulse-api.
+# Declare variables to be passed into your templates.
+
+# Number of API replicas
+replicaCount: 2
+
+# Container image settings
+image:
+  repository: cloudpulse-api
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: dev
+
+# Optional image pull secrets for private registries
+imagePullSecrets: []
+# - name: my-registry-secret
+
+# Optional extra labels/annotations
+podAnnotations: {}
+podLabels: {}
+
+# Service account configuration 
+serviceAccount:
+  create: false
+  name: ""
+  annotations: {}
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+# Horizontal Pod Autoscaler configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: null
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Container port the API listens on
+containerPort: 8080
+
+# Probes
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 20
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 3
+  periodSeconds: 10
+
+# Resource requests/limits
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+# Advanced scheduling knobs (not used yet, but available)
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Name overrides (optional)
+nameOverride: ""
+fullnameOverride: cloudpulse-api
