@@ -31,7 +31,9 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 Create a new target to monitor:
 
 ```bash
-POST /targets
+curl -v http://localhost:8080/targets -H "Content-Type: application/json" -d '{ "name": "My Blog", "url": "https://example.com"}'
+or
+POST http://localhost:8080/targets
 
 Request:
 
@@ -60,13 +62,17 @@ GET /targets
 Return the latest probe result for each target:
 
 ```bash
-GET /results
+curl -v http://localhost:8080/results
+or
+GET http://localhost:8080/results
 ```
 
 Return the full probe history for the given target ID:
 
 ```bash
-GET /results/{id}
+curl -v http://localhost:8080/results/abc123
+or
+GET http://localhost:8080/results/abc123
 ```
 
 ## Deploy with Helm
