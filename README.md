@@ -56,7 +56,9 @@ Response:
 Return all targets:
 
 ```bash
-GET /targets
+curl -v http://localhost:8080/targets
+or 
+GET http://localhost:8080/targets
 ```
 
 Return the latest probe result for each target:
