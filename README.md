@@ -69,11 +69,56 @@ Return the full probe history for the given target ID:
 GET /results/{id}
 ```
 
+## Deploy with Helm
 
+CloudPulse ships with a Helm chart for deploying the API to Kubernetes.
 
-## Status
+### Prerequisites
 
-- In active development.
+- A running Kubernetes cluster (Rancher Desktop, kind, k3d, EKS, etc.)
+- `kubectl` configured to talk to the cluster
+- `helm` installed
+- Docker (or compatible runtime) for building the image
+
+---
+
+### Build the API image
+From the repo root:
+```bash
+docker build -f apps/api/Dockerfile -t cloudpulse-api:dev .
+```
+
+### Install (or upgrade) the Helm release
+```bash
+helm upgrade --install cloudpulse-api deployments/helm/cloudpulse-api -n cloudpulse --create-namespace
+```
+
+### Check that everything is deployed
+```bash
+helm list -n cloudpulse
+kubectl -n cloudpulse get deploy,svc,pods
+```
+
+You should see:
+- A Deployment for the API
+- A Service exposing it on port 80
+- Pods in Running state
+
+### Test the API
+Port-forward the Service:
+```bash
+kubectl -n cloudpulse port-forward svc/cloudpulse-api 8080:80
+```
+
+In another terminal:
+```bash
+curl http://localhost:8080/health
+```
+
+Expected response:
+```bash
+ok
+```
 
 ## Development Timeline
 
@@ -88,19 +133,6 @@ GET /results/{id}
 - CloudWatch alarms & dashboards ([#18](../../pull/18))
 - CI/CD (GitHub Actions) ([#20](../../pull/20))
 - Recurring uptime checks and per-target result history ([#22](../../pull/22))
-- Pause for documentation ([#24](../../pull/22))
-
-## Changes Tracking
-
-1. Added repo structure and go modules
-2. Added Components -> API (initial) describing /health and /metrics.
-3. Local Docker Compose with Prometheus
-4. Terraform backend (S3)
-5. VPC infrastructure
-6. ECS Fargate API + ALB
-7. DynamoDB results table
-8. Runner (EventBridge schedule)
-9. CloudWatch alarms & dashboards
-10. CI/CD (GitHub Actions)
-11. Recurring uptime checks and per-target result history
-12. Pause for documentation
+- Pause for documentation ([#24](../../pull/24))
+- Kubernetes deployment and service ([#26](../../pull/26))
+- Helm chart update ([#28](../../pull/28))
