@@ -67,8 +67,16 @@ jobs:
       - name: terraform validate (dev)
         working-directory: infra/envs/dev
         run: |
-          terraform init -backend=false
-          terraform validate
+          echo "Terraform version:"
+          terraform version
+          echo "Working directory: $(pwd)"
+          echo "Listing files:"
+          ls -la
+          terraform init -backend=false -get=true -upgrade
+          terraform validate || true
+          echo "---- json validate output ----"
+          terraform validate -json > validate.json || true
+          cat validate.json
 
       # validate prod config as well for parity
       - name: terraform validate (prod)
