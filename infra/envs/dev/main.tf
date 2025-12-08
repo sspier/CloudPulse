@@ -1,6 +1,6 @@
 terraform {
   # require a reasonably recent terraform version
-  required_version = ">= 1.3.0"
+  required_version = ">= 1.9.0"
 
   # bring in the aws provider at a stable version
   required_providers {
