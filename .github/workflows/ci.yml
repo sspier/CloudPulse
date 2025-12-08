@@ -27,7 +27,7 @@ jobs:
       - name: set up go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
 
       # ensure module dependencies are pulled
       - name: download go modules
