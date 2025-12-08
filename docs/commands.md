@@ -16,12 +16,18 @@
 - See pods and their state: kubectl -n cloudpulse get pods
 - See details for a specific pod: kubectl -n cloudpulse describe pod cloudpulse-api-xxxxxxxxxx-xxxxx
 - Port-forwarding: 
-	- Create a network pipe from the local machine to a pod or service inside the cluster:
-		- kubectl -n cloudpulse port-forward svc/cloudpulse-api 8080:80
-	- Create a pipe directly to a pod:
-		- kubectl port-forward pod/cloudpulse-api-xxxxx 8080:8080
+  - Create a network pipe from the local machine to a pod or service inside the cluster:
+	- kubectl -n cloudpulse port-forward svc/cloudpulse-api 8080:80
+  - Create a pipe directly to a pod:
+    - kubectl port-forward pod/cloudpulse-api-xxxxx 8080:8080
 
 - Clean out old manually-applied Deployment/service
-	- kubectl -n cloudpulse delete deploy cloudpulse-api
-	- kubectl -n cloudpulse delete svc cloudpulse-api
+  - kubectl -n cloudpulse delete deploy cloudpulse-api --ignore-not-found
+  - kubectl -n cloudpulse delete svc cloudpulse-api --ignore-not-found
+	
+- Helm	
+  - Install / upgrade the Helm release: helm upgrade --install cloudpulse-api deployments/helm/cloudpulse-api -n cloudpulse --create-namespace
+  - Check the release: helm list -n cloudpulse
+  - Verify the Deployment, Service, and Pods: kubectl -n cloudpulse get deploy,svc,pods
+
 

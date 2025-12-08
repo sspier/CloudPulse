@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sspier/cloudpulse/internal/model"
 )
 
 // testHealthEndpoint checks that /health responds with 200
@@ -17,8 +19,8 @@ func TestHealthEndpoint(t *testing.T) {
 
 	// create a small router that exposes only /health for this test
 	testRouter := http.NewServeMux()
-	testRouter.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
+	testRouter.HandleFunc("/health", func(responseWriter http.ResponseWriter, _ *http.Request) {
+		responseWriter.WriteHeader(http.StatusOK)
 	})
 
 	// build a fake GET request to /health
@@ -76,18 +78,18 @@ func TestTargetsPOST(t *testing.T) {
 	router.HandleFunc("/targets", targetsHandler)
 
 	body := `{"name": "Example", "url": "https://example.com"}`
-	req := httptest.NewRequest(http.MethodPost, "/targets", bytes.NewBufferString(body))
-	req.Header.Set("Content-Type", "application/json")
+	request := httptest.NewRequest(http.MethodPost, "/targets", bytes.NewBufferString(body))
+	request.Header.Set("Content-Type", "application/json")
 
-	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, req)
+	responseRecorder := httptest.NewRecorder()
+	router.ServeHTTP(responseRecorder, request)
 
-	if rr.Code != http.StatusCreated {
-		t.Fatalf("expected HTTP 201 Created, got %d", rr.Code)
+	if responseRecorder.Code != http.StatusCreated {
+		t.Fatalf("expected HTTP 201 Created, got %d", responseRecorder.Code)
 	}
 
-	var target Target
-	if err := json.NewDecoder(rr.Body).Decode(&target); err != nil {
+	var target model.Target
+	if err := json.NewDecoder(responseRecorder.Body).Decode(&target); err != nil {
 		t.Fatalf("failed to decode response body: %v", err)
 	}
 
@@ -107,23 +109,23 @@ func TestTargetsGET(t *testing.T) {
 
 	// reset store and seed a couple of targets
 	targetStore = NewInMemoryStore()
-	targetStore.AddTarget("Example A", "https://a.example.com")
-	targetStore.AddTarget("Example B", "https://b.example.com")
+	targetStore.AddTarget(context.Background(), "Example A", "https://a.example.com")
+	targetStore.AddTarget(context.Background(), "Example B", "https://b.example.com")
 
 	router := http.NewServeMux()
 	router.HandleFunc("/targets", targetsHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/targets", nil)
-	rr := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/targets", nil)
+	responseRecorder := httptest.NewRecorder()
 
-	router.ServeHTTP(rr, req)
+	router.ServeHTTP(responseRecorder, request)
 
-	if rr.Code != http.StatusOK {
-		t.Fatalf("expected HTTP 200 OK, got %d", rr.Code)
+	if responseRecorder.Code != http.StatusOK {
+		t.Fatalf("expected HTTP 200 OK, got %d", responseRecorder.Code)
 	}
 
-	var targets []Target
-	if err := json.NewDecoder(rr.Body).Decode(&targets); err != nil {
+	var targets []model.Target
+	if err := json.NewDecoder(responseRecorder.Body).Decode(&targets); err != nil {
 		t.Fatalf("failed to decode response body: %v", err)
 	}
 
@@ -137,18 +139,18 @@ func TestResultsLatest(t *testing.T) {
 
 	// reset store and seed a target + multiple results
 	targetStore = NewInMemoryStore()
-	tgt := targetStore.AddTarget("Example", "https://example.com")
+	target, _ := targetStore.AddTarget(context.Background(), "Example", "https://example.com")
 
 	// older result
-	targetStore.AddResult(Result{
-		TargetID:   tgt.ID,
+	targetStore.AddResult(context.Background(), model.Result{
+		TargetID:   target.ID,
 		Status:     "down",
 		HTTPStatus: 500,
 	})
 
 	// latest result
-	targetStore.AddResult(Result{
-		TargetID:   tgt.ID,
+	targetStore.AddResult(context.Background(), model.Result{
+		TargetID:   target.ID,
 		Status:     "up",
 		HTTPStatus: 200,
 	})
@@ -156,17 +158,17 @@ func TestResultsLatest(t *testing.T) {
 	router := http.NewServeMux()
 	router.HandleFunc("/results", resultsHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/results", nil)
-	rr := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/results", nil)
+	responseRecorder := httptest.NewRecorder()
 
-	router.ServeHTTP(rr, req)
+	router.ServeHTTP(responseRecorder, request)
 
-	if rr.Code != http.StatusOK {
-		t.Fatalf("expected HTTP 200 OK, got %d", rr.Code)
+	if responseRecorder.Code != http.StatusOK {
+		t.Fatalf("expected HTTP 200 OK, got %d", responseRecorder.Code)
 	}
 
-	var results []Result
-	if err := json.NewDecoder(rr.Body).Decode(&results); err != nil {
+	var results []model.Result
+	if err := json.NewDecoder(responseRecorder.Body).Decode(&results); err != nil {
 		t.Fatalf("failed to decode response body: %v", err)
 	}
 
@@ -184,15 +186,15 @@ func TestResultsHistory(t *testing.T) {
 
 	// reset store and seed a target + multiple results
 	targetStore = NewInMemoryStore()
-	tgt := targetStore.AddTarget("Example", "https://example.com")
+	target, _ := targetStore.AddTarget(context.Background(), "Example", "https://example.com")
 
-	targetStore.AddResult(Result{
-		TargetID:   tgt.ID,
+	targetStore.AddResult(context.Background(), model.Result{
+		TargetID:   target.ID,
 		Status:     "down",
 		HTTPStatus: 500,
 	})
-	targetStore.AddResult(Result{
-		TargetID:   tgt.ID,
+	targetStore.AddResult(context.Background(), model.Result{
+		TargetID:   target.ID,
 		Status:     "up",
 		HTTPStatus: 200,
 	})
@@ -201,21 +203,21 @@ func TestResultsHistory(t *testing.T) {
 	router.HandleFunc("/results/{id}", resultsForTargetHandler)
 
 	// build a request with the target id in the path
-	req := httptest.NewRequest(http.MethodGet, "/results/"+tgt.ID, nil)
+	request := httptest.NewRequest(http.MethodGet, "/results/"+target.ID, nil)
 
 	// go 1.22 style mux patterns require the mux to set path values
 	// httptest doesn’t do that automatically, so we set the path value manually
-	req.SetPathValue("id", tgt.ID)
+	request.SetPathValue("id", target.ID)
 
-	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, req)
+	responseRecorder := httptest.NewRecorder()
+	router.ServeHTTP(responseRecorder, request)
 
-	if rr.Code != http.StatusOK {
-		t.Fatalf("expected HTTP 200 OK, got %d", rr.Code)
+	if responseRecorder.Code != http.StatusOK {
+		t.Fatalf("expected HTTP 200 OK, got %d", responseRecorder.Code)
 	}
 
-	var results []Result
-	if err := json.NewDecoder(rr.Body).Decode(&results); err != nil {
+	var results []model.Result
+	if err := json.NewDecoder(responseRecorder.Body).Decode(&results); err != nil {
 		t.Fatalf("failed to decode response body: %v", err)
 	}
 

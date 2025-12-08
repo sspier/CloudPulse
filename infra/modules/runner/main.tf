@@ -34,6 +34,34 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# grant the lambda permission to read/write to the dynamodb tables
+resource "aws_iam_role_policy" "dynamodb_access" {
+  name = "${local.name_prefix}-dynamodb-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:BatchGetItem"
+        ]
+        Resource = [
+          "arn:aws:dynamodb:*:*:table/${var.table_name_targets}",
+          "arn:aws:dynamodb:*:*:table/${var.table_name_results}",
+          "arn:aws:dynamodb:*:*:table/${var.table_name_results}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
 # runner lambda that executes the probe logic on a schedule
 # container image is built separately and pushed to ecr
 resource "aws_lambda_function" "runner" {
@@ -48,7 +76,9 @@ resource "aws_lambda_function" "runner" {
 
   environment {
     variables = {
-      ENV = var.env # pass environment context to the container
+      ENV                = var.env
+      TABLE_NAME_TARGETS = var.table_name_targets
+      TABLE_NAME_RESULTS = var.table_name_results
     }
   }
 
