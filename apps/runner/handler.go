@@ -17,6 +17,11 @@ type Handler struct {
 
 // HandleRequest is the entry point for the handler
 // it is called by the AWS Lambda runtime
+// performs a batch job. When triggered, it fetches all targets, runs probes for them
+//
+//	concurrently (using sync.WaitGroup), saves the results, and then exits.
+//
+// It does not listen for HTTP requests.
 func (handler *Handler) HandleRequest(ctx context.Context) (string, error) {
 	// list all listOfTargets
 	listOfTargets, err := handler.store.ListTargets(ctx)

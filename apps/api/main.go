@@ -10,6 +10,7 @@ import (
 	"github.com/sspier/cloudpulse/internal/store"
 )
 
+// read data (serve API) and write data (schedule)
 func main() {
 	resultsTable := os.Getenv("TABLE_NAME_RESULTS")
 	targetsTable := os.Getenv("TABLE_NAME_TARGETS")

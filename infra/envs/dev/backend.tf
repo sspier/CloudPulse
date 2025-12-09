@@ -6,6 +6,6 @@ terraform {
     key          = "envs/dev/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true # encrypt state at rest
-    use_lockfile = true # enable state locking with s3 + dynamodb
+    use_lockfile = true # enable native s3 state locking
   }
 }

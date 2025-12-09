@@ -9,8 +9,9 @@ import (
 	"github.com/sspier/cloudpulse/internal/store"
 )
 
+// bootstraps the Lambda environment and starts the handler to write data and run probes
 func main() {
-	// Initialize store based on environment
+	// initialize store based on environment
 	awsRegion := os.Getenv("AWS_REGION")
 	if awsRegion == "" {
 		awsRegion = "us-east-1"
@@ -23,7 +24,7 @@ func main() {
 		log.Fatal("TABLE_NAME_TARGETS and TABLE_NAME_RESULTS must be set")
 	}
 
-	// We use context.Background() for init, but handler will provide its own context
+	// use context.Background() for init, but handler will provide its own context
 	dynamoDBStore, err := store.NewDynamoDBStore(context.Background(), awsRegion, targetsTable, resultsTable)
 	if err != nil {
 		log.Fatalf("failed to initialize store: %v", err)
