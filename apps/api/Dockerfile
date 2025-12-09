@@ -21,6 +21,7 @@ RUN go mod download
 
 # copy the rest of the project
 COPY apps/api ./apps/api
+COPY internal ./internal
 
 # build the cloudpulse api binary
 # disable cgo to produce a static binary that runs cleanly on alpine
