@@ -222,5 +222,4 @@ ok
 - Pause for documentation ([#24](../../pull/24))
 - Kuburnetes deployment and service ([#26](../../pull/26))
 - Helm chart update ([#28](../../pull/28))
-- Shared `internal` packages refactor ([#30](../../pull/30))
-- DynamoDB Targets & Runner Service ([#32](../../pull/32))
+- DynamoDB Targets & Runner Service ([#30](../../pull/30))
