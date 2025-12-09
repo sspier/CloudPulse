@@ -1,6 +1,6 @@
 terraform {
   # require a reasonably recent terraform version
-  required_version = ">= 1.9.0"
+  required_version = ">= 1.10.0"
 
   # aws provider pinned to a stable 5.x release
   required_providers {
