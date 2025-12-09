@@ -1,6 +1,6 @@
 terraform {
   # require a reasonably recent terraform version
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.9.0"
 
   # aws provider pinned to a stable 5.x release
   required_providers {
@@ -8,16 +8,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-  }
-
-  # store production state in s3 with locking enabled
-  # prod uses its own tfstate file to keep environments isolated
-  backend "s3" {
-    bucket       = "cloudpulse-tf-state"
-    key          = "envs/prod/terraform.tfstate"
-    region       = "us-east-1"
-    encrypt      = true
-    use_lockfile = true
   }
 }
 
