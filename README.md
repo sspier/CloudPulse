@@ -22,7 +22,75 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 | CI/CD                  | **GitHub Actions**                                | Build, test, lint, Terraform plan/apply, ECR deploy    |
 | Metrics & Logs         | **Prometheus**, **CloudWatch**, **OpenTelemetry** | Uptime metrics, traces, alerts                         |
 | Containerization       | **Docker**                                        | Local dev + AWS deployment packaging                   |
-| Local Emulation        | **LocalStack**                                    | Run AWS services locally for dev/test                  |
+| Local Emulation        | **DynamoDB Local**                                | Run DynamoDB locally for dev/test                      |
+
+---
+
+## Architecture Overview
+
+CloudPulse uses a split-service architecture for robustness and scalability:
+
+1.  **API Service**: Handles user requests (add target, view results) and serves as the front door.
+    - **Mode 1: In-Memory (Standalone)**: Stores data in RAM.
+    - **Mode 2: Cloud (Distributed)**: Stores data in DynamoDB.
+2.  **Runner System**: Polls targets and records results.
+    - **Mode 1: Internal Ticker**: Runs as a background goroutine within the API service (Standalone mode).
+    - **Mode 2: Lambda Runner**: Runs as a decoupled AWS Lambda function triggered by EventBridge (Cloud mode).
+
+---
+
+## Local Development
+
+You can run CloudPulse locally in two modes.
+
+### 1. Standalone (In-Memory)
+
+Simplest way to test the API logic. Data is lost on restart.
+
+```bash
+go run apps/api/main.go
+# API listens on localhost:8080
+```
+
+### 2. Integrated (Local DynamoDB)
+
+Test the full flow with persistence and the Runner service.
+
+**Step 1: Start DynamoDB**
+
+```bash
+docker-compose up -d
+# Starts DynamoDB Local and creates 'cloudpulse-targets-local' and 'cloudpulse-probe-results-local' tables
+```
+
+**Step 2: Start the API**
+
+```bash
+export TABLE_NAME_TARGETS=cloudpulse-targets-local
+export TABLE_NAME_RESULTS=cloudpulse-probe-results-local
+export AWS_ENDPOINT=http://localhost:8000
+export AWS_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=dummy
+export AWS_SECRET_ACCESS_KEY=dummy
+
+go run apps/api/main.go
+```
+
+**Step 3: Run the Probe Runner**
+
+(In a separate terminal)
+
+```bash
+# Same env vars as above
+export TABLE_NAME_TARGETS=cloudpulse-targets-local
+export TABLE_NAME_RESULTS=cloudpulse-probe-results-local
+export AWS_ENDPOINT=http://localhost:8000
+export AWS_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=dummy
+export AWS_SECRET_ACCESS_KEY=dummy
+
+go run apps/runner/main.go
+```
 
 ---
 
@@ -30,9 +98,11 @@ All infrastructure, from networking to monitoring, is defined as code - allowing
 
 Create a new target to monitor:
 
-```bash
+````bash
 curl -v http://localhost:8080/targets -H "Content-Type: application/json" -d '{ "name": "My Blog", "url": "https://example.com"}'
+
 or
+
 POST http://localhost:8080/targets
 
 Request:
@@ -42,6 +112,7 @@ Request:
   "name": "Example",
   "url": "https://example.com"
 }
+````
 
 Response:
 
@@ -57,7 +128,7 @@ Return all targets:
 
 ```bash
 curl -v http://localhost:8080/targets
-or 
+or
 GET http://localhost:8080/targets
 ```
 
@@ -91,39 +162,48 @@ CloudPulse ships with a Helm chart for deploying the API to Kubernetes.
 ---
 
 ### Build the API image
+
 From the repo root:
+
 ```bash
 docker build -f apps/api/Dockerfile -t cloudpulse-api:dev .
 ```
 
 ### Install (or upgrade) the Helm release
+
 ```bash
 helm upgrade --install cloudpulse-api deployments/helm/cloudpulse-api -n cloudpulse --create-namespace
 ```
 
 ### Check that everything is deployed
+
 ```bash
 helm list -n cloudpulse
 kubectl -n cloudpulse get deploy,svc,pods
 ```
 
 You should see:
+
 - A Deployment for the API
 - A Service exposing it on port 80
 - Pods in Running state
 
 ### Test the API
+
 Port-forward the Service:
+
 ```bash
 kubectl -n cloudpulse port-forward svc/cloudpulse-api 8080:80
 ```
 
 In another terminal:
+
 ```bash
 curl http://localhost:8080/health
 ```
 
 Expected response:
+
 ```bash
 ok
 ```
@@ -142,5 +222,7 @@ ok
 - CI/CD (GitHub Actions) ([#20](../../pull/20))
 - Recurring uptime checks and per-target result history ([#22](../../pull/22))
 - Pause for documentation ([#24](../../pull/24))
-- Kubernetes deployment and service ([#26](../../pull/26))
+- Kuburnetes deployment and service ([#26](../../pull/26))
 - Helm chart update ([#28](../../pull/28))
+- Shared `internal` packages refactor ([#30](../../pull/30))
+- DynamoDB Targets & Runner Service ([#32](../../pull/32))
