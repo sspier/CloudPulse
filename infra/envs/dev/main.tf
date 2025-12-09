@@ -39,7 +39,7 @@ resource "aws_ecr_repository" "api" {
 # convenience local for the full ecr image url for the api
 locals {
   api_image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_repository.api.name}:dev"
-  
+
   # project-wide variables
   project_name = "cloudpulse"
   env          = "dev"
@@ -47,7 +47,7 @@ locals {
     Project = "cloudpulse"
     Env     = "dev"
   }
-  
+
   # placeholder image until runner container exists
   runner_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/cloudpulse-runner:dev"
 }
@@ -107,7 +107,7 @@ module "runner" {
   env                 = local.env
   schedule_expression = "rate(1 minute)" # how often the runner should probe targets
   runner_image        = local.runner_image
-  
+
   table_name_targets = module.dynamodb_targets.table_name
   table_name_results = module.dynamodb_results.table_name
 
