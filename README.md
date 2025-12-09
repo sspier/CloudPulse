@@ -98,7 +98,7 @@ go run apps/runner/main.go
 
 Create a new target to monitor:
 
-````bash
+```bash
 curl -v http://localhost:8080/targets -H "Content-Type: application/json" -d '{ "name": "My Blog", "url": "https://example.com"}'
 
 or
@@ -107,15 +107,13 @@ POST http://localhost:8080/targets
 
 Request:
 
-```json
 {
   "name": "Example",
   "url": "https://example.com"
 }
-````
+```
 
 Response:
-
 ```json
 {
   "id": "20251120184323.874139000",
