@@ -5,15 +5,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/aws/aws-lambda-go/lambda"
+	awsLambda "github.com/aws/aws-lambda-go/lambda"
 	"github.com/sspier/cloudpulse/internal/store"
 )
 
 func main() {
 	// Initialize store based on environment
-	region := os.Getenv("AWS_REGION")
-	if region == "" {
-		region = "us-east-1"
+	awsRegion := os.Getenv("AWS_REGION")
+	if awsRegion == "" {
+		awsRegion = "us-east-1"
 	}
 
 	targetsTable := os.Getenv("TABLE_NAME_TARGETS")
@@ -24,14 +24,14 @@ func main() {
 	}
 
 	// We use context.Background() for init, but handler will provide its own context
-	st, err := store.NewDynamoDBStore(context.Background(), region, targetsTable, resultsTable)
+	dynamoDBStore, err := store.NewDynamoDBStore(context.Background(), awsRegion, targetsTable, resultsTable)
 	if err != nil {
 		log.Fatalf("failed to initialize store: %v", err)
 	}
 
-	h := &Handler{
-		store: st,
+	handler := &Handler{
+		store: dynamoDBStore,
 	}
 
-	lambda.Start(h.HandleRequest)
+	awsLambda.Start(handler.HandleRequest)
 }
