@@ -44,7 +44,7 @@ func main() {
 	httpRouter.HandleFunc("/results/{id}", resultsForTargetHandler)
 
 	// background scheduler for recurring uptime checks
-	// we only run this if explicit configuration says so, OR if we are in local mode
+	// we only run this if explicit configuration says so, OR if we are in local mode.
 	// in cloud mode, the runner service handles this
 	// for simplicity:
 	// - if using in-memory, run scheduler
