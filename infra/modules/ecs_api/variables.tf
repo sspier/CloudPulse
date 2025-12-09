@@ -36,6 +36,16 @@ variable "region" {
   default     = "us-east-1"
 }
 
+variable "table_name_targets" {
+  description = "Name of the targets DynamoDB table"
+  type        = string
+}
+
+variable "table_name_results" {
+  description = "Name of the results DynamoDB table"
+  type        = string
+}
+
 variable "tags" {
   description = "Base tags to apply to ECS and ALB resources"
   type        = map(string)

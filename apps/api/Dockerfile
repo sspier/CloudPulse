@@ -1,7 +1,7 @@
 # build stage ----------------------------------------------------
 # use alpine-based golang image for a smaller build environment
 # base image to build the cloudpulse api binary
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # install basic certs so the built binary can make tls calls
 # install the certificates the app needs to trust HTTPS connections
@@ -21,6 +21,7 @@ RUN go mod download
 
 # copy the rest of the project
 COPY apps/api ./apps/api
+COPY internal ./internal
 
 # build the cloudpulse api binary
 # disable cgo to produce a static binary that runs cleanly on alpine

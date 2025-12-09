@@ -1,41 +1,29 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"time"
+
+	"github.com/sspier/cloudpulse/internal/model"
+	"github.com/sspier/cloudpulse/internal/probe"
+	"github.com/sspier/cloudpulse/internal/store"
 )
 
-var targetStore = NewInMemoryStore()
-
-// shared http client with a timeout so probes don’t hang forever
-var httpClient = &http.Client{
-	Timeout: 5 * time.Second,
-}
+// targetStore is the global store instance.
+// In a real app, we might inject this dependency.
+var targetStore store.Store = NewInMemoryStore()
 
 // runCheck performs a single probe of the target url and records the result
 // this is called both when a target is created and by the background scheduler
-func runCheck(t Target) {
-	resp, err := httpClient.Get(t.URL)
-	status := "down"
-	httpStatus := 0
-
-	if err == nil {
-		httpStatus = resp.StatusCode
-		if resp.StatusCode >= 200 && resp.StatusCode < 400 {
-			status = "up"
-		}
-		resp.Body.Close()
-	}
+func runCheck(t model.Target) {
+	// Use the shared probe logic
+	result := probe.Check(context.Background(), t)
 
 	// store the probe result so it can be retrieved via GET /results and GET /results/{id}
-	targetStore.AddResult(Result{
-		TargetID:   t.ID,
-		Status:     status,
-		HTTPStatus: httpStatus,
-	})
+	targetStore.AddResult(context.Background(), result)
 }
 
 // simple health endpoint used by load balancers and humans
@@ -53,7 +41,11 @@ func targetsHandler(responseWriter http.ResponseWriter, request *http.Request) {
 
 	case http.MethodGet:
 		// pull all targets from the store
-		targets := targetStore.ListTargets()
+		targets, err := targetStore.ListTargets(request.Context())
+		if err != nil {
+			http.Error(responseWriter, "internal error", http.StatusInternalServerError)
+			return
+		}
 
 		responseWriter.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(responseWriter).Encode(targets); err != nil {
@@ -74,7 +66,11 @@ func targetsHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		}
 
 		// create the target
-		created := targetStore.AddTarget(payload.Name, payload.URL)
+		created, err := targetStore.AddTarget(request.Context(), payload.Name, payload.URL)
+		if err != nil {
+			http.Error(responseWriter, "failed to create target", http.StatusInternalServerError)
+			return
+		}
 
 		// run an immediate uptime check in the background
 		go runCheck(created)
@@ -96,10 +92,15 @@ func resultsHandler(responseWriter http.ResponseWriter, request *http.Request) {
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 
-	results := targetStore.LatestResults()
+	results, err := targetStore.LatestResults(request.Context())
+	if err != nil {
+		http.Error(responseWriter, "internal error", http.StatusInternalServerError)
+		return
+	}
+
 	if results == nil {
 		// always return [] instead of null for better json ergonomics
-		results = []Result{}
+		results = []model.Result{}
 	}
 
 	responseWriter.WriteHeader(http.StatusOK)
@@ -126,9 +127,14 @@ func resultsForTargetHandler(responseWriter http.ResponseWriter, request *http.R
 	responseWriter.Header().Set("Content-Type", "application/json")
 
 	// fetch the full list of results for this specific target
-	results := targetStore.ResultsForTarget(id)
+	results, err := targetStore.ResultsForTarget(request.Context(), id)
+	if err != nil {
+		http.Error(responseWriter, "internal error", http.StatusInternalServerError)
+		return
+	}
+
 	if results == nil {
-		results = []Result{}
+		results = []model.Result{}
 	}
 
 	responseWriter.WriteHeader(http.StatusOK)

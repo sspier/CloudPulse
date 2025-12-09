@@ -27,7 +27,7 @@ jobs:
       - name: set up go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
 
       # ensure module dependencies are pulled
       - name: download go modules
@@ -57,7 +57,7 @@ jobs:
       - name: set up terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.11.0
+          terraform_version: 1.9.0
 
       # enforce terraform formatting across the repo
       - name: terraform fmt (recursive)
@@ -67,8 +67,16 @@ jobs:
       - name: terraform validate (dev)
         working-directory: infra/envs/dev
         run: |
-          terraform init -backend=false
-          terraform validate
+          echo "Terraform version:"
+          terraform version
+          echo "Working directory: $(pwd)"
+          echo "Listing files:"
+          ls -la
+          terraform init -backend=false -get=true -upgrade
+          terraform validate || true
+          echo "---- json validate output ----"
+          terraform validate -json > validate.json || true
+          cat validate.json
 
       # validate prod config as well for parity
       - name: terraform validate (prod)

@@ -1,6 +1,6 @@
 terraform {
   # require a reasonably recent terraform version
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.9.0"
 
   # aws provider pinned to a stable 5.x release
   required_providers {
@@ -8,16 +8,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-  }
-
-  # store production state in s3 with locking enabled
-  # prod uses its own tfstate file to keep environments isolated
-  backend "s3" {
-    bucket       = "cloudpulse-tf-state"
-    key          = "envs/prod/terraform.tfstate"
-    region       = "us-east-1"
-    encrypt      = true
-    use_lockfile = true
   }
 }
 
@@ -49,6 +39,10 @@ module "ecs_api" {
   desired_count   = 1 # can scale higher later
   region          = data.aws_region.current.name
 
+  # environment variables for table access
+  table_name_targets = module.targets_table.table_name
+  table_name_results = module.results_table.table_name
+
   tags = {
     Project = "cloudpulse"
     Env     = "prod"
@@ -63,6 +57,20 @@ module "vpc" {
   vpc_cidr             = "10.0.0.0/16"
   public_subnet_cidrs  = ["10.0.0.0/24", "10.0.1.0/24"]
   private_subnet_cidrs = ["10.0.2.0/24", "10.0.3.0/24"]
+
+  tags = {
+    Project = "cloudpulse"
+    Env     = "prod"
+  }
+}
+
+# production dynamodb table for targets
+# stores target URLs to probe
+module "targets_table" {
+  source = "../../modules/dynamodb_targets"
+
+  table_name_prefix = "cloudpulse-targets"
+  env               = "prod"
 
   tags = {
     Project = "cloudpulse"
@@ -93,6 +101,10 @@ module "runner" {
   schedule_expression = "rate(5 minutes)" # slower cycle for prod
 
   runner_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/cloudpulse-runner:prod"
+
+  # pass table names to the lambda environment
+  table_name_targets = module.targets_table.table_name
+  table_name_results = module.results_table.table_name
 
   tags = {
     Project = "cloudpulse"

@@ -192,6 +192,34 @@ resource "aws_iam_role" "ecs_task" {
   )
 }
 
+# grant the ecs task permission to read/write to the dynamodb tables
+resource "aws_iam_role_policy" "dynamodb_access" {
+  name = "${local.name_prefix}-dynamodb-policy"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:BatchGetItem"
+        ]
+        Resource = [
+          "arn:aws:dynamodb:*:*:table/${var.table_name_targets}",
+          "arn:aws:dynamodb:*:*:table/${var.table_name_results}",
+          "arn:aws:dynamodb:*:*:table/${var.table_name_results}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
 # ecs task definition for the cloudpulse api fargate task
 # wires up the container image, port, env vars, logs, and cpu/memory
 resource "aws_ecs_task_definition" "this" {
@@ -218,6 +246,14 @@ resource "aws_ecs_task_definition" "this" {
         {
           name  = "PORT"
           value = tostring(var.container_port)
+        },
+        {
+          name  = "TABLE_NAME_TARGETS"
+          value = var.table_name_targets
+        },
+        {
+          name  = "TABLE_NAME_RESULTS"
+          value = var.table_name_results
         }
       ]
       logConfiguration = {
