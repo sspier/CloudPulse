@@ -93,6 +93,7 @@ func (inMemoryStore *InMemoryStore) LatestResults(ctx context.Context) ([]model.
 			continue
 		}
 		latestResult := resultsForTarget[len(resultsForTarget)-1]
+		latestResult.Name = inMemoryStore.targets[id].Name
 		latest = append(latest, latestResult)
 	}
 
