@@ -1,25 +1,42 @@
-# CloudPulse Commands
-
-- build: docker build -f apps/api/Dockerfile .
-- run: docker compose -f deployments/compose/docker-compose.local.yml up --build
-- see health: curl -v http://localhost:8080/health
-- see logs for container: 'docker ps' then 'docker logs cloudpulse-api-1'
-- create a target: curl -v http://localhost:8080/targets -H "Content-Type: application/json" -d '{ "name": "My Blog", "url": "https://example.com"}'
-- list all targets: curl -v http://localhost:8080/targets
-- get latest results for each target: curl -v http://localhost:8080/results
-- get full history for one target: curl -v http://localhost:8080/results/abc123
+# CloudPulse Commands (PowerShell)
 
 
-- Build the image locally: CloudPulse\apps\api> docker build -t cloudpulse-api:dev .
-- Update deployment: CloudPulse\deployments\kubernetes> kubectl apply -f .\cloudpulse-api-deployment.yaml
-- Update deployment: CloudPulse\deployments\kubernetes> kubectl apply -f .\cloudpulse-api-service.yaml
-- See pods and their state: kubectl -n cloudpulse get pods
-- See details for a specific pod: kubectl -n cloudpulse describe pod cloudpulse-api-xxxxxxxxxx-xxxxx
-- Port-forwarding: 
-  - Create a network pipe from the local machine to a pod or service inside the cluster:
-	- kubectl -n cloudpulse port-forward svc/cloudpulse-api 8080:80
-  - Create a pipe directly to a pod:
-    - kubectl port-forward pod/cloudpulse-api-xxxxx 8080:8080
+### create the namespace
+kubectl create namespace cloudpulse
+
+### build images locally: 
+docker build -t cloudpulse-api:v1 -f apps/api/Dockerfile .
+docker build -t cloudpulse-runner:v1 -f apps/runner/Dockerfile .
+
+### database infrastructure
+kubectl apply -f deployments/kubernetes/dynamodb.yaml -n cloudpulse
+
+#### initialize tables
+kubectl apply -f deployments/kubernetes/setup-tables-job.yaml -n cloudpulse
+
+### deploy API via Helm
+helm upgrade --install cloudpulse-api deployments/helm/cloudpulse-api -n cloudpulse --set image.repository=cloudpulse-api --set image.tag=v1 --set env.AWS_ENDPOINT="http://dynamodb-local:8000" --set env.TABLE_NAME_TARGETS="cloudpulse-targets-local" --set env.TABLE_NAME_RESULTS="cloudpulse-probe-results-local"
+
+### deploy runner via manifest
+kubectl apply -f deployments/kubernetes/runner.yaml -n cloudpulse
+
+### port forwarding
+kubectl port-forward svc/cloudpulse-api 8080:80 -n cloudpulse
+
+### create new target:
+Invoke-RestMethod -Uri "http://localhost:8080/targets" -Method Post -ContentType "application/json" -Body '{ "name": "Google", "url": "https://google.com" }'	
+
+### list all targets-local
+Invoke-RestMethod -Uri "http://localhost:8080/targets" | Format-Table
+
+### view all results
+Invoke-RestMethod -Uri "http://localhost:8080/results" | Format-Table
+
+### view results for given 
+Invoke-RestMethod -Uri "http://localhost:8080/results/<target-id-here>" | Format-Table
+
+
+
 
 - Clean out old manually-applied Deployment/service
   - kubectl -n cloudpulse delete deploy cloudpulse-api --ignore-not-found
@@ -30,4 +47,16 @@
   - Check the release: helm list -n cloudpulse
   - Verify the Deployment, Service, and Pods: kubectl -n cloudpulse get deploy,svc,pods
 
+
+netstat -ano | findstr :8080
+
+tasklist /FI "PID eq 13324"
+tasklist /FI "PID eq 13836"
+
+
+taskkill /PID <PID> /F
+
+
+
+kubectl get svc -A
 

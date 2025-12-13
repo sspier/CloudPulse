@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudpulse-runner
+  namespace: cloudpulse
+  labels:
+    app: cloudpulse-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudpulse-runner
+  template:
+    metadata:
+      labels:
+        app: cloudpulse-runner
+    spec:
+      containers:
+        - name: runner
+          image: cloudpulse-runner:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            # dynamoDB table names
+            # these must match the names created by the setup-tables-job
+            - name: TABLE_NAME_TARGETS
+              value: "cloudpulse-targets-local"
+            - name: TABLE_NAME_RESULTS
+              value: "cloudpulse-probe-results-local"
+            # AWS_ENDPOINT points to the local DynamoDB Service (dynamodb-local:8000)
+            # this overrides the default AWS region endpoint.
+            - name: AWS_ENDPOINT
+              value: "http://dynamodb-local:8000"
+            - name: AWS_REGION
+              value: "us-east-1"
+            - name: AWS_ACCESS_KEY_ID
+              value: "dummy"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "dummy"
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"

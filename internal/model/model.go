@@ -14,6 +14,7 @@ type Target struct {
 // Result represents the outcome of a single uptime probe
 type Result struct {
 	TargetID   string `json:"targetId" dynamodbav:"target_id"`
+	Name       string `json:"name" dynamodbav:"-"`
 	Status     string `json:"status" dynamodbav:"status"`
 	HTTPStatus int    `json:"httpStatus" dynamodbav:"http_status"`
 	Timestamp  int64  `json:"timestamp" dynamodbav:"timestamp"` // added timestamp for history

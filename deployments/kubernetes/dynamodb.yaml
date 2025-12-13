@@ -1,0 +1,50 @@
+# service: defines a stable network endpoint for the database
+# other pods (API, Runner) can reach it at http://dynamodb-local:8000
+apiVersion: v1
+kind: Service
+metadata:
+  name: dynamodb-local
+  namespace: cloudpulse
+  labels:
+    app: dynamodb-local
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: dynamodb-local
+---
+# deployment: manages the pod(s) that run the actual database container
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamodb-local
+  namespace: cloudpulse
+  labels:
+    app: dynamodb-local
+spec:
+  replicas: 1 # only 1 replica because dynamodb local does not support clustering/sharding
+  selector:
+    matchLabels:
+      app: dynamodb-local
+  template:
+    metadata:
+      labels:
+        app: dynamodb-local
+    spec:
+      containers:
+        - name: dynamodb-local
+          image: amazon/dynamodb-local:latest
+          # configuration arguments:
+          #  -sharedDb: uses a single database file for all credentials/clients.
+          #             essential for local dev so the API and Admin CLI see the same tables.
+          #  -inMemory: runs the DB entirely in RAM. fast, but data is lost on pod restart.
+          #             to persist data, remove -inMemory and usage -dbPath with a PersistentVolume.
+          args: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

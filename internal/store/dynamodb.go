@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -28,9 +29,17 @@ func NewDynamoDBStore(ctx context.Context, region, targetsTable, resultsTable st
 		return nil, fmt.Errorf("unable to load SDK config: %w", err)
 	}
 
+	// check for custom endpoint (e.g. for local development)
+	var opts []func(*dynamodb.Options)
+	if endpoint := os.Getenv("AWS_ENDPOINT"); endpoint != "" {
+		opts = append(opts, func(o *dynamodb.Options) {
+			o.BaseEndpoint = aws.String(endpoint)
+		})
+	}
+
 	// create a new DynamoDB client from the config
 	return &DynamoDBStore{
-		client:       dynamodb.NewFromConfig(awsConfig),
+		client:       dynamodb.NewFromConfig(awsConfig, opts...),
 		targetsTable: targetsTable,
 		resultsTable: resultsTable,
 	}, nil
@@ -182,6 +191,7 @@ func (dynamoDBStore *DynamoDBStore) LatestResults(ctx context.Context) ([]model.
 		if len(awsQueryOutput.Items) > 0 {
 			var result model.Result
 			_ = attributevalue.UnmarshalMap(awsQueryOutput.Items[0], &result)
+			result.Name = target.Name
 			latestResults = append(latestResults, result)
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	awsLambda "github.com/aws/aws-lambda-go/lambda"
 	"github.com/sspier/cloudpulse/internal/store"
@@ -34,5 +35,23 @@ func main() {
 		store: dynamoDBStore,
 	}
 
-	awsLambda.Start(handler.HandleRequest)
+	// check if running in Lambda
+	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
+		awsLambda.Start(handler.HandleRequest)
+	} else {
+		log.Println("running in local mode (poll loop)")
+		// run once immediately
+		if _, err := handler.HandleRequest(context.Background()); err != nil {
+			log.Printf("initial check failed: %v", err)
+		}
+
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if _, err := handler.HandleRequest(context.Background()); err != nil {
+				log.Printf("check failed: %v", err)
+			}
+		}
+	}
 }

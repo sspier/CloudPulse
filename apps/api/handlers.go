@@ -68,6 +68,7 @@ func targetsHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		// create the target
 		created, err := targetStore.AddTarget(request.Context(), payload.Name, payload.URL)
 		if err != nil {
+			log.Printf("failed to add target: %v", err)
 			http.Error(responseWriter, "failed to create target", http.StatusInternalServerError)
 			return
 		}
