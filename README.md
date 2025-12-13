@@ -114,6 +114,7 @@ Request:
 ```
 
 Response:
+
 ```json
 {
   "id": "20251120184323.874139000",
@@ -146,64 +147,91 @@ or
 GET http://localhost:8080/results/abc123
 ```
 
-## Deploy with Helm
+## Kubernetes Local Development
 
-CloudPulse ships with a Helm chart for deploying the API to Kubernetes.
+Run the entire CloudPulse stack (API, Runner, DynamoDB) on a local Kubernetes cluster.
 
 ### Prerequisites
 
-- A running Kubernetes cluster (Rancher Desktop, kind, k3d, EKS, etc.)
-- `kubectl` configured to talk to the cluster
-- `helm` installed
-- Docker (or compatible runtime) for building the image
+- A running Kubernetes cluster (Rancher Desktop, kind, k3d, Docker Desktop)
+- `kubectl` and `helm` installed
+- `docker` installed
 
----
+### 1. Build Images
 
-### Build the API image
-
-From the repo root:
+Build the Docker images for the API and Runner services.
+**Important**: Use the tag `v1` (or matching tag) throughout.
 
 ```bash
-docker build -f apps/api/Dockerfile -t cloudpulse-api:dev .
+docker build -t cloudpulse-api:v1 -f apps/api/Dockerfile .
+docker build -t cloudpulse-runner:v1 -f apps/runner/Dockerfile .
 ```
 
-### Install (or upgrade) the Helm release
+### 2. Infrastructure Setup
+
+Deploy DynamoDB Local and initialize the tables.
 
 ```bash
-helm upgrade --install cloudpulse-api deployments/helm/cloudpulse-api -n cloudpulse --create-namespace
+# Create namespace
+kubectl create namespace cloudpulse
+
+# Deploy Database Infrastructure
+kubectl apply -f deployments/kubernetes/dynamodb.yaml -n cloudpulse
+
+# Initialize Tables (Job)
+kubectl apply -f deployments/kubernetes/setup-tables-job.yaml -n cloudpulse
 ```
 
-### Check that everything is deployed
+### 3. Deploy Applications
+
+**API Service (via Helm)**
+Connects to the local DynamoDB service on port 8000.
 
 ```bash
-helm list -n cloudpulse
-kubectl -n cloudpulse get deploy,svc,pods
+helm upgrade --install cloudpulse-api deployments/helm/cloudpulse-api -n cloudpulse \
+  --set image.repository=cloudpulse-api \
+  --set image.tag=v1 \
+  --set env.AWS_ENDPOINT="http://dynamodb-local:8000" \
+  --set env.TABLE_NAME_TARGETS="cloudpulse-targets-local" \
+  --set env.TABLE_NAME_RESULTS="cloudpulse-probe-results-local"
 ```
 
-You should see:
-
-- A Deployment for the API
-- A Service exposing it on port 80
-- Pods in Running state
-
-### Test the API
-
-Port-forward the Service:
+**Runner Service (via Manifest)**
+Background worker that polls targets.
 
 ```bash
-kubectl -n cloudpulse port-forward svc/cloudpulse-api 8080:80
+kubectl apply -f deployments/kubernetes/runner.yaml -n cloudpulse
 ```
 
-In another terminal:
+### 4. Verification
+
+**Connections**
+Port-forward the API Service (recommended over Pod forwarding for stability).
 
 ```bash
-curl http://localhost:8080/health
+kubectl port-forward svc/cloudpulse-api 8080:80 -n cloudpulse
 ```
 
-Expected response:
+**Test Commands (PowerShell)**
+
+```powershell
+# Create a Target
+Invoke-RestMethod -Uri "http://localhost:8080/targets" -Method Post -ContentType "application/json" -Body '{ "name": "Google", "url": "https://google.com" }'
+
+# View Results
+Invoke-RestMethod -Uri "http://localhost:8080/results" | Format-Table
+```
+
+**Test Commands (Bash/Curl)**
 
 ```bash
-ok
+# Create a Target
+curl -X POST http://localhost:8080/targets \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Google", "url": "https://google.com" }'
+
+# View Results
+curl http://localhost:8080/results
 ```
 
 ## Development Timeline
@@ -223,3 +251,4 @@ ok
 - Kuburnetes deployment and service ([#26](../../pull/26))
 - Helm chart update ([#28](../../pull/28))
 - DynamoDB Targets & Runner Service ([#30](../../pull/30))
+- Update for local development ([#32](../../pull/32))
