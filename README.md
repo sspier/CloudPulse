@@ -39,9 +39,96 @@ CloudPulse uses a split-service architecture for robustness and scalability:
 
 ---
 
-## Local Development
+## Kubernetes Local Development
 
-You can run CloudPulse locally in two modes.
+Run the entire CloudPulse stack (API, Runner, DynamoDB) on a local Kubernetes cluster.
+
+### Prerequisites
+
+- A running Kubernetes cluster (Rancher Desktop, kind, k3d, Docker Desktop)
+- `kubectl` and `helm` installed
+- `docker` installed
+
+### 1. Build Images
+
+Build the Docker images for the API and Runner services.
+**Important**: Use the tag `v1` (or matching tag) throughout.
+
+```bash
+docker build -t cloudpulse-api:v1 -f apps/api/Dockerfile .
+docker build -t cloudpulse-runner:v1 -f apps/runner/Dockerfile .
+```
+
+### 2. Infrastructure Setup
+
+Deploy DynamoDB Local and initialize the tables.
+
+```bash
+# Create namespace
+kubectl create namespace cloudpulse
+
+# Deploy Database Infrastructure
+kubectl apply -f deployments/kubernetes/dynamodb.yaml -n cloudpulse
+
+# Initialize Tables (Job)
+kubectl apply -f deployments/kubernetes/setup-tables-job.yaml -n cloudpulse
+```
+
+### 3. Deploy Applications
+
+**API Service (via Helm)**
+Connects to the local DynamoDB service on port 8000.
+
+```bash
+helm upgrade --install cloudpulse-api deployments/helm/cloudpulse-api -n cloudpulse \
+  --set image.repository=cloudpulse-api \
+  --set image.tag=v1 \
+  --set env.AWS_ENDPOINT="http://dynamodb-local:8000" \
+  --set env.TABLE_NAME_TARGETS="cloudpulse-targets-local" \
+  --set env.TABLE_NAME_RESULTS="cloudpulse-probe-results-local"
+```
+
+**Runner Service (via Manifest)**
+Background worker that polls targets.
+
+```bash
+kubectl apply -f deployments/kubernetes/runner.yaml -n cloudpulse
+```
+
+### 4. Verification
+
+**Connections**
+Port-forward the API Service (recommended over Pod forwarding for stability).
+
+```bash
+kubectl port-forward svc/cloudpulse-api 8080:80 -n cloudpulse
+```
+
+**Test Commands (PowerShell)**
+
+```powershell
+# Create a Target
+Invoke-RestMethod -Uri "http://localhost:8080/targets" -Method Post -ContentType "application/json" -Body '{ "name": "Google", "url": "https://google.com" }'
+
+# View Results
+Invoke-RestMethod -Uri "http://localhost:8080/results" | Format-Table
+```
+
+**Test Commands (Bash/Curl)**
+
+```bash
+# Create a Target
+curl -X POST http://localhost:8080/targets \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Google", "url": "https://google.com" }'
+
+# View Results
+curl http://localhost:8080/results
+```
+
+## Legacy Local Development
+
+You can also run CloudPulse locally using Docker Compose logic.
 
 ### 1. Standalone (In-Memory)
 
@@ -251,4 +338,4 @@ curl http://localhost:8080/results
 - Kuburnetes deployment and service ([#26](../../pull/26))
 - Helm chart update ([#28](../../pull/28))
 - DynamoDB Targets & Runner Service ([#30](../../pull/30))
-- Update for local development ([#32](../../pull/32))
+- Local Development updates ([#32](../../pull/32))
