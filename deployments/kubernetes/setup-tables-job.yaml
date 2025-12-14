@@ -4,7 +4,7 @@ metadata:
   name: setup-tables-script
   namespace: cloudpulse
 data:
-  # script that initializes the database
+  # The script that initializes the database
   setup.sh: |
     #!/bin/sh
     echo "Waiting for DynamoDB Service..."
@@ -35,7 +35,7 @@ data:
 
     echo "Tables initialized."
 ---
-# job: run a container once
+# Job: Runs a container once to completion
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -49,7 +49,7 @@ spec:
           image: amazon/aws-cli
           command: ["/bin/sh", "/scripts/setup.sh"]
           env:
-            # dummy credentials are required by the AWS CLI even for local DynamoDB
+            # Dummy credentials are required by the AWS CLI even for local DynamoDB
             - name: AWS_ACCESS_KEY_ID
               value: "dummy"
             - name: AWS_SECRET_ACCESS_KEY
