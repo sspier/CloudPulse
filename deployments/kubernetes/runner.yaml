@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: runner
-          image: cloudpulse-runner:dev
+          image: cloudpulse-runner:v1
           imagePullPolicy: IfNotPresent
           env:
             # dynamoDB table names
