@@ -35,8 +35,32 @@ Invoke-RestMethod -Uri "http://localhost:8080/results" | Format-Table
 ### view results for given 
 Invoke-RestMethod -Uri "http://localhost:8080/results/<target-id-here>" | Format-Table
 
+### verify container names 
+kubectl get pod cloudpulse-api-65d58dc8c4-77wcf -n cloudpulse -o jsonpath="{.spec.containers[*].name}"
 
+### debug container
+kubectl debug -it cloudpulse-api-65d58dc8c4-77wcf -n cloudpulse --image=busybox --target=api
 
+	### Check Localhost Connectivity: Verify the API is listening on port 8080.
+	wget -qO- http://localhost:8080/health
+	
+	### confirm pod can resolve dynamodb-local to the underlying Service IP
+	nslookup dynamodb-local
+
+	### 
+	telnet dynamodb-local 8000
+		^]quit
+		Console escape. Commands are:
+		 l      go to line mode
+		 c      go to character mode
+		 z      suspend telnet
+		 e      exit telnet
+		e
+		/ # 
+		/ # exit
+	
+	
+	
 
 - Clean out old manually-applied Deployment/service
   - kubectl -n cloudpulse delete deploy cloudpulse-api --ignore-not-found
