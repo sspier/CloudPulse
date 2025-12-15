@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/sspier/cloudpulse/internal/model"
 	"github.com/sspier/cloudpulse/internal/probe"
@@ -62,6 +63,13 @@ func targetsHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		// reject invalid json bodies or missing fields
 		if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
 			http.Error(responseWriter, "invalid JSON body", http.StatusBadRequest)
+			return
+		}
+
+		// validate URL
+		parsedURL, err := url.ParseRequestURI(payload.URL)
+		if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
+			http.Error(responseWriter, "invalid URL: must be http or https", http.StatusBadRequest)
 			return
 		}
 

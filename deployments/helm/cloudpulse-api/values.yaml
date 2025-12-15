@@ -11,6 +11,12 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: dev
 
+# Environment variables for the application
+env:
+  AWS_ENDPOINT: "http://dynamodb-local:8000"
+  TABLE_NAME_TARGETS: "cloudpulse-targets-local"
+  TABLE_NAME_RESULTS: "cloudpulse-probe-results-local"
+
 # Optional image pull secrets for private registries
 imagePullSecrets: []
 # - name: my-registry-secret
@@ -19,7 +25,7 @@ imagePullSecrets: []
 podAnnotations: {}
 podLabels: {}
 
-# Service account configuration 
+# Service account configuration
 serviceAccount:
   create: false
   name: ""
