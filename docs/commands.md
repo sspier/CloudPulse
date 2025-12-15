@@ -159,6 +159,21 @@ kubectl logs -l app.kubernetes.io/name=cloudpulse-api -n cloudpulse
 kubectl port-forward svc/cloudpulse-api 8081:80 -n cloudpulse
 ```
 
+### Metrics (Prometheus)
+
+**Deploy:**
+
+```bash
+kubectl apply -f deployments/kubernetes/prometheus-configmap.yaml -n cloudpulse
+kubectl apply -f deployments/kubernetes/prometheus.yaml -n cloudpulse
+```
+
+**Access Dashboard (localhost:9090):**
+
+```bash
+kubectl port-forward svc/prometheus 9090:9090 -n cloudpulse
+```
+
 ### debug Service
 
 ```bash
