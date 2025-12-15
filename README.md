@@ -191,22 +191,3 @@ curl -v http://localhost:8080/results/abc123
 or
 GET http://localhost:8080/results/abc123
 ```
-
-## Development Timeline
-
-- Bootstrap repo (Go modules, folder layout) ([#2](../../pull/2))
-- Minimal API (/health, /metrics) ([#4](../../pull/4))
-- Local Docker Compose with Prometheus ([#6](../../pull/6))
-- Terraform backend (S3) ([#8](../../pull/8))
-- VPC infrastructure ([#10](../../pull/10))
-- ECS Fargate API + ALB ([#12](../../pull/12))
-- DynamoDB results table ([#14](../../pull/14))
-- Runner (EventBridge schedule) ([#16](../../pull/16))
-- CloudWatch alarms & dashboards ([#18](../../pull/18))
-- CI/CD (GitHub Actions) ([#20](../../pull/20))
-- Recurring uptime checks and per-target result history ([#22](../../pull/22))
-- Pause for documentation ([#24](../../pull/24))
-- Kuburnetes deployment and service ([#26](../../pull/26))
-- Helm chart update ([#28](../../pull/28))
-- DynamoDB Targets & Runner Service ([#30](../../pull/30))
-- Local Development updates ([#32](../../pull/32))
