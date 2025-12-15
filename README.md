@@ -126,61 +126,6 @@ curl -X POST http://localhost:8080/targets \
 curl http://localhost:8080/results
 ```
 
-## Legacy Local Development
-
-You can also run CloudPulse locally using Docker Compose logic.
-
-### 1. Standalone (In-Memory)
-
-Simplest way to test the API logic. Data is lost on restart.
-
-```bash
-go run apps/api/main.go
-# API listens on localhost:8080
-```
-
-### 2. Integrated (Local DynamoDB)
-
-Test the full flow with persistence and the Runner service.
-
-**Step 1: Start DynamoDB**
-
-```bash
-docker-compose up -d
-# Starts DynamoDB Local and creates 'cloudpulse-targets-local' and 'cloudpulse-probe-results-local' tables
-```
-
-**Step 2: Start the API**
-
-```bash
-export TABLE_NAME_TARGETS=cloudpulse-targets-local
-export TABLE_NAME_RESULTS=cloudpulse-probe-results-local
-export AWS_ENDPOINT=http://localhost:8000
-export AWS_REGION=us-east-1
-export AWS_ACCESS_KEY_ID=dummy
-export AWS_SECRET_ACCESS_KEY=dummy
-
-go run apps/api/main.go
-```
-
-**Step 3: Run the Probe Runner**
-
-(In a separate terminal)
-
-```bash
-# Same env vars as above
-export TABLE_NAME_TARGETS=cloudpulse-targets-local
-export TABLE_NAME_RESULTS=cloudpulse-probe-results-local
-export AWS_ENDPOINT=http://localhost:8000
-export AWS_REGION=us-east-1
-export AWS_ACCESS_KEY_ID=dummy
-export AWS_SECRET_ACCESS_KEY=dummy
-
-go run apps/runner/main.go
-```
-
----
-
 ## API Documentation
 
 Create a new target to monitor:
@@ -290,7 +235,20 @@ Background worker that polls targets.
 kubectl apply -f deployments/kubernetes/runner.yaml -n cloudpulse
 ```
 
-### 4. Verification
+### 4. Monitoring (Optional)
+
+Deploy Prometheus to scrape metrics from the API.
+
+```bash
+# Create ConfigMap and Deployment
+kubectl apply -f deployments/kubernetes/prometheus-configmap.yaml -n cloudpulse
+kubectl apply -f deployments/kubernetes/prometheus.yaml -n cloudpulse
+
+# Access Prometheus Dashboard (localhost:9090)
+kubectl port-forward svc/prometheus 9090:9090 -n cloudpulse
+```
+
+### 5. Verification
 
 **Connections**
 Port-forward the API Service (recommended over Pod forwarding for stability).

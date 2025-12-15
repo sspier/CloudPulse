@@ -13,7 +13,7 @@ import (
 )
 
 // TestIntegrationWithLocalDynamoDB verifies the full flow using the local DynamoDB container
-// pre-requisite: 'docker-compose up -d' must be running
+// pre-requisite: DynamoDB Local must be running on localhost:8000 (e.g. via kubectl port-forward)
 func TestIntegrationWithLocalDynamoDB(t *testing.T) {
 	ctx := context.Background()
 	const awsRegion = "us-east-1"
